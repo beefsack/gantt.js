@@ -14,4 +14,6 @@
           'task 2'
         ]
         duration: 30
+@ganttCanvas.gantt.schedules.default.overriddenWorkTimes['2012-06-05'] = 4
+@ganttCanvas.gantt.schedules.default.overriddenWorkTimes['2012-06-07'] = 4
 @ganttCanvas.draw()

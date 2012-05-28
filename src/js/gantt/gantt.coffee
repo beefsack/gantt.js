@@ -24,6 +24,12 @@ class @Gantt
       a.startDuration = starts[n]
       a.dependants = dependantMap[n]
       a.startDate = sched.getDateAfterDuration @startDate, a.startDuration
+      if a.startDate.hour is @getActivitySchedule(a).getAvailableHoursForDate a.startDate.date
+        # Advance to the start of the next day, can't start a task at the end
+        xd = Gantt.isoToDate a.startDate.date
+        xd = xd.addDays 1
+        a.startDate.date = Gantt.dateToIso xd
+        a.startDate.hour = 0
       a.endDate = sched.getDateAfterDuration @startDate, a.startDuration + a.duration
       activityList.push a
     return activityList unless @sort

@@ -16,9 +16,16 @@ class @GanttCanvas
   context: null
   headerFont: 'bold 8pt sans-serif'
   headerFontColour: '#000000'
+  activityNamePadding: 5
   activityFont: '8pt sans-serif'
   activityFontColour: '#000000'
   activityPadding: 5
+  activityCompleteColour: '#00FF00'
+  activityIncompleteColour: '#EEEEEE'
+  activityCritical: '#FF0000'
+  activitySlack: '#0000FF'
+  activityLineWidth: 2
+  minimumArrowHorizontalDistance: 12
   constructor: (options) ->
     @gantt = options.gantt if options.gantt?
     @reference = options.reference if options.reference?
@@ -118,11 +125,11 @@ class @GanttCanvas
       @context.fillStyle = @activityFontColour
       @context.textAlign = 'left'
       @context.textBaseline = 'middle'
-      @context.fillText a.name, @activityPadding, y + @rowHeight / 2, @nameWidth - @activityPadding
+      @context.fillText a.name, @activityNamePadding, y + @rowHeight / 2, @nameWidth - @activityNamePadding * 2
       # Fill in the cell availabilities
       x = @nameWidth
       d = @getStartDate()
-      e = @getEndDate()      
+      e = @getEndDate()
       while d <= e
         s = @gantt.getActivitySchedule a
         hours = s.getAvailableHoursForDate d
@@ -130,8 +137,27 @@ class @GanttCanvas
         @context.fillStyle = @getAvailColour hours / 8
         @context.fillRect x + 1, y + 1, @dayWidth - 1, @rowHeight - 1
         xd = new XDate d
+        startDayX = x if a.startDate.date is d
+        endDayX = x if a.endDate.date is d
         x += @dayWidth
         d = Gantt.dateToIso xd.addDays(1)
+      # Draw activity
+      startDayAvailHours = @gantt.getActivitySchedule(a).getAvailableHoursForDate a.startDate.date
+      startDayRatio = a.startDate.hour / startDayAvailHours
+      startDayOffset = @getDayInnerWidth() * startDayRatio
+      endDayAvailHours = @gantt.getActivitySchedule(a).getAvailableHoursForDate a.endDate.date
+      endDayRatio = a.endDate.hour / endDayAvailHours
+      endDayOffset = @getDayInnerWidth() * endDayRatio
+      @context.fillStyle = @activityIncompleteColour
+      a.x = startDayX + @activityPadding + startDayOffset
+      a.y = y + @activityPadding
+      a.width = endDayX - startDayX - startDayOffset + endDayOffset
+      a.height = @rowHeight - @activityPadding * 2
+      @context.fillRect a.x, a.y, a.width, a.height
+      @context.strokeStyle = @activitySlack
+      @context.lineWidth = @activityLineWidth
+      @context.strokeRect a.x, a.y, a.width, a.height
+      # Draw border
       y += @rowHeight
   getHeaderHeight: ->
     @weekHeaderHeight + @dayHeaderHeight
@@ -141,3 +167,5 @@ class @GanttCanvas
     diffRatio = diff * ratio
     shade = Math.round Math.min(@unavailShade, @availShade) + diffRatio
     "rgb(#{shade},#{shade},#{shade})"
+  getDayInnerWidth: ->
+    @dayWidth - @activityPadding * 2
