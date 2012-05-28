@@ -9,11 +9,15 @@ class @GanttCanvas
   minorGridWidth: 1
   minorGridColour: '#CCCCCC'
   majorGridColour: '#000000'
+  availShade: 255
+  unavailShade: 150
   nameWidth: 200
   activities: null
   context: null
   headerFont: 'bold 8pt sans-serif'
+  headerFontColour: '#000000'
   activityFont: '8pt sans-serif'
+  activityFontColour: '#000000'
   activityPadding: 5
   constructor: (options) ->
     @gantt = options.gantt if options.gantt?
@@ -83,6 +87,7 @@ class @GanttCanvas
     d = @getStartDate()
     e = @getEndDate()
     @context.font = @headerFont
+    @context.fillStyle = @headerFontColour
     while d <= e
       xd = new XDate d
       # Write the day
@@ -107,12 +112,32 @@ class @GanttCanvas
       d = Gantt.dateToIso xd.addDays(1)
   drawActivities: ->
     y = @getHeaderHeight()
-    @context.font = @activityFont
     for a in @activities
       # Write the name
+      @context.font = @activityFont
+      @context.fillStyle = @activityFontColour
       @context.textAlign = 'left'
       @context.textBaseline = 'middle'
       @context.fillText a.name, @activityPadding, y + @rowHeight / 2, @nameWidth - @activityPadding
+      # Fill in the cell availabilities
+      x = @nameWidth
+      d = @getStartDate()
+      e = @getEndDate()      
+      while d <= e
+        s = @gantt.getActivitySchedule a
+        hours = s.getAvailableHoursForDate d
+        # Find out the percentage of 8 and make it white to grey based on ratio
+        @context.fillStyle = @getAvailColour hours / 8
+        @context.fillRect x + 1, y + 1, @dayWidth - 1, @rowHeight - 1
+        xd = new XDate d
+        x += @dayWidth
+        d = Gantt.dateToIso xd.addDays(1)
       y += @rowHeight
   getHeaderHeight: ->
     @weekHeaderHeight + @dayHeaderHeight
+  getAvailColour: (ratio) ->
+    ratio = Math.max 0, Math.min(ratio, 1)
+    diff = Math.abs @availShade - @unavailShade
+    diffRatio = diff * ratio
+    shade = Math.round Math.min(@unavailShade, @availShade) + diffRatio
+    "rgb(#{shade},#{shade},#{shade})"

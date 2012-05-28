@@ -18,7 +18,7 @@ class @Gantt
     dependantMap = @getDependantMap()
     # Calculate actual starts and ends
     for n, a of @activities
-      sched = if a.scheduleName? then @schedules[a.scheduleName] else @schedules.default 
+      sched = @getActivitySchedule a
       a = _.clone a
       a.name = n
       a.startDuration = starts[n]
@@ -60,6 +60,8 @@ class @Gantt
       if a.predecessors?
         dependantMap[p].push n for p in a.predecessors
     dependantMap
+  getActivitySchedule: (a) ->
+    if a.scheduleName? then @schedules[a.scheduleName] else @schedules.default 
 
 Gantt.dateToIso = dateToIso
 Gantt.isoToDate = isoToDate
