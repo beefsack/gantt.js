@@ -26,6 +26,12 @@ class @GanttCanvas
   activitySlack: '#0000FF'
   activityLineWidth: 2
   minimumArrowHorizontalDistance: 12
+  lineBuffer: 10
+  lineRegister: []
+  shadowOffsetX: 3
+  shadowOffsetY: 3
+  shadowColor: 'rgba(100,100,100,100)'
+  shadowBlur: 5
   constructor: (options) ->
     @gantt = options.gantt if options.gantt?
     @reference = options.reference if options.reference?
@@ -153,7 +159,9 @@ class @GanttCanvas
       a.y = y + @activityPadding
       a.width = endDayX - startDayX - startDayOffset + endDayOffset
       a.height = @rowHeight - @activityPadding * 2
+      @enableShadow()
       @context.fillRect a.x, a.y, a.width, a.height
+      @disableShadow()
       @context.strokeStyle = @activitySlack
       @context.lineWidth = @activityLineWidth
       @context.strokeRect a.x, a.y, a.width, a.height
@@ -169,3 +177,10 @@ class @GanttCanvas
     "rgb(#{shade},#{shade},#{shade})"
   getDayInnerWidth: ->
     @dayWidth - @activityPadding * 2
+  enableShadow: ->
+    @context.shadowOffsetX = @shadowOffsetX
+    @context.shadowOffsetY = @shadowOffsetY
+    @context.shadowColor = @shadowColor
+    @context.shadowBlur = @shadowBlur
+  disableShadow: ->
+    @context.shadowColor = 'rgba(0,0,0,0)'
