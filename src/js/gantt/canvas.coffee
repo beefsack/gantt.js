@@ -13,6 +13,7 @@ class @GanttCanvas
   unavailShade: 150
   nameWidth: 200
   activities: null
+  activityIndex: {}
   context: null
   headerFont: 'bold 8pt sans-serif'
   headerFontColour: '#000000'
@@ -25,9 +26,9 @@ class @GanttCanvas
   activityCritical: '#FF0000'
   activitySlack: '#0000FF'
   activityLineWidth: 2
-  minimumArrowHorizontalDistance: 12
-  lineBuffer: 10
-  lineRegister: []
+  arrowBuffer: 10
+  arrowRegister: {}
+  arrowHeadSize: 3
   shadowOffsetX: 3
   shadowOffsetY: 3
   shadowColor: 'rgba(100,100,100,100)'
@@ -39,6 +40,8 @@ class @GanttCanvas
     return unless @gantt? and @reference? and @reference.getContext?
     @context = @reference.getContext '2d'
     @activities = @gantt.getCompiledActivities()
+    # Build index for quick referencing
+    @activityIndex[a.name] = a for a in @activities
     @context.canvas.width = @getWidth()
     @context.canvas.height = @getHeight()
     @drawGrid()
@@ -159,14 +162,38 @@ class @GanttCanvas
       a.y = y + @activityPadding
       a.width = endDayX - startDayX - startDayOffset + endDayOffset
       a.height = @rowHeight - @activityPadding * 2
-      @enableShadow()
-      @context.fillRect a.x, a.y, a.width, a.height
-      @disableShadow()
-      @context.strokeStyle = @activitySlack
-      @context.lineWidth = @activityLineWidth
-      @context.strokeRect a.x, a.y, a.width, a.height
+      @drawActivity a
       # Draw border
       y += @rowHeight
+    # Draw arrows
+    for a in @activities
+      arrowStartX = a.x + a.width
+      arrowStartY = a.y + a.height / 2
+      for dName in a.dependants
+        d = @activityIndex[dName]
+        arrowEndX = d.x + @arrowBuffer
+        while @arrowExists arrowEndX
+          arrowEndX += @arrowBuffer
+        @registerArrow arrowEndX
+        arrowEndY = d.y - @activityLineWidth
+        # Draw horizontal
+        @context.strokeStyle = @activitySlack
+        @context.lineWidth = @activityLineWidth
+        @context.beginPath()
+        @context.moveTo arrowStartX, arrowStartY
+        @context.lineTo arrowEndX, arrowStartY
+        @context.lineTo arrowEndX, arrowEndY
+        @context.lineTo arrowEndX - @arrowHeadSize, arrowEndY - @arrowHeadSize
+        @context.moveTo arrowEndX, arrowEndY
+        @context.lineTo arrowEndX + @arrowHeadSize, arrowEndY - @arrowHeadSize
+        @context.stroke()
+  drawActivity: (a) ->
+    @enableShadow()
+    @context.fillRect a.x, a.y, a.width, a.height
+    @disableShadow()
+    @context.strokeStyle = @activitySlack
+    @context.lineWidth = @activityLineWidth
+    @context.strokeRect a.x, a.y, a.width, a.height    
   getHeaderHeight: ->
     @weekHeaderHeight + @dayHeaderHeight
   getAvailColour: (ratio) ->
@@ -184,3 +211,5 @@ class @GanttCanvas
     @context.shadowBlur = @shadowBlur
   disableShadow: ->
     @context.shadowColor = 'rgba(0,0,0,0)'
+  registerArrow: (x) -> @arrowRegister[Math.round(x / @arrowBuffer)] = true
+  arrowExists: (x) -> @arrowRegister[Math.round(x / @arrowBuffer)]?
