@@ -6,6 +6,7 @@ class @Gantt
   schedules:
     default: new GanttSchedule
   startDate: dateToIso new XDate
+  sort: true
   constructor: (options) ->
     options = {} unless options?
     @activities = options.activities if options.activities?
@@ -25,6 +26,7 @@ class @Gantt
       a.startDate = sched.getDateAfterDuration @startDate, a.startDuration
       a.endDate = sched.getDateAfterDuration @startDate, a.startDuration + a.duration
       activityList.push a
+    return activityList unless @sort
     activityList.sort (a, b) ->
       return 1 if a.startDuration > b.startDuration
       return -1 if b.startDuration > a.startDuration

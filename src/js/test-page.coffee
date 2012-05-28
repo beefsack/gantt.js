@@ -14,4 +14,4 @@
           'task 2'
         ]
         duration: 30
-@ganttCanvas.render()
+@ganttCanvas.draw()

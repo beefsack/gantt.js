@@ -13,11 +13,12 @@ class @GanttCanvas
   activities: null
   context: null
   headerFont: 'bold 8pt sans-serif'
-  activityFont: '10pt sans-serif'
+  activityFont: '8pt sans-serif'
+  activityPadding: 5
   constructor: (options) ->
     @gantt = options.gantt if options.gantt?
     @reference = options.reference if options.reference?
-  render: ->
+  draw: ->
     return unless @gantt? and @reference? and @reference.getContext?
     @context = @reference.getContext '2d'
     @activities = @gantt.getCompiledActivities()
@@ -25,6 +26,7 @@ class @GanttCanvas
     @context.canvas.height = @getHeight()
     @drawGrid()
     @drawHeader()
+    @drawActivities()
   getHeight: ->
     return 0 if @activities.length is 0
     @activities.length * @rowHeight + @getHeaderHeight()
@@ -103,7 +105,14 @@ class @GanttCanvas
         @context.stroke()
       x += @dayWidth
       d = Gantt.dateToIso xd.addDays(1)
-      console.log d
-  renderActivity: (context) ->
+  drawActivities: ->
+    y = @getHeaderHeight()
+    @context.font = @activityFont
+    for a in @activities
+      # Write the name
+      @context.textAlign = 'left'
+      @context.textBaseline = 'middle'
+      @context.fillText a.name, @activityPadding, y + @rowHeight / 2, @nameWidth - @activityPadding
+      y += @rowHeight
   getHeaderHeight: ->
     @weekHeaderHeight + @dayHeaderHeight
