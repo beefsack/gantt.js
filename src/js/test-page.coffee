@@ -4,14 +4,14 @@
     activities:
       'task 1':
         predecessors: []
-        duration: 2
+        duration: 50
       'task 2':
         predecessors: []
-        duration: 3
+        duration: 60
       'task 3':
         predecessors: [
           'task 1'
           'task 2'
         ]
-        duration: 5
+        duration: 30
 @ganttCanvas.render()
