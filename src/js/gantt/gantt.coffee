@@ -3,15 +3,8 @@ isoToDate = (iso) -> new XDate iso
 
 class @Gantt
   activities: {}
-  defaultWorkTimes:
-    Monday: 8
-    Tuesday: 8
-    Wednesday: 8
-    Thursday: 8
-    Friday: 8
-    Saturday: 0
-    Sunday: 0
-  overriddenWorkTimes: {}
+  schedules:
+    default: new GanttSchedule
   startDate: dateToIso new XDate
   constructor: (options) ->
     options = {} unless options?
@@ -24,12 +17,13 @@ class @Gantt
     dependantMap = @getDependantMap()
     # Calculate actual starts and ends
     for n, a of @activities
+      sched = if a.scheduleName? then @schedules[a.scheduleName] else @schedules.default 
       a = _.clone a
       a.name = n
       a.startDuration = starts[n]
       a.dependants = dependantMap[n]
-      a.startDate = @getDateAfterDuration @startDate, a.startDuration
-      a.endDate = @getDateAfterDuration @startDate, a.startDuration + a.duration
+      a.startDate = sched.getDateAfterDuration @startDate, a.startDuration
+      a.endDate = sched.getDateAfterDuration @startDate, a.startDuration + a.duration
       activityList.push a
     activityList.sort (a, b) ->
       return 1 if a.startDuration > b.startDuration
@@ -64,28 +58,6 @@ class @Gantt
       if a.predecessors?
         dependantMap[p].push n for p in a.predecessors
     dependantMap
-  # Get the date, given a start date and a duration. Takes into account the
-  # available hours. Date is an object with day (ISO8601) and hour (start hour
-  # of day durationwise)
-  getDateAfterDuration: (date, duration) ->
-    date = { date: date } unless _.isObject date
-    duration += date.hour if date.hour?
-    d = new XDate date.date
-    while true
-      dateHours = @getAvailableHoursForDate d
-      duration -= dateHours
-      break if duration <= 0
-      d = d.addDays 1
-    hour = dateHours + duration
-    {
-      date: Gantt.dateToIso d
-      hour: hour
-      ratio: hour / dateHours
-    }
-  getAvailableHoursForDate: (date) ->
-    date = Gantt.dateToIso date if date.getMilliseconds?
-    @overriddenWorkTimes[date] ||
-    @defaultWorkTimes[Gantt.isoToDate(date).toString('dddd')]
 
 Gantt.dateToIso = dateToIso
 Gantt.isoToDate = isoToDate
