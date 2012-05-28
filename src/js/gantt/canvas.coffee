@@ -12,6 +12,8 @@ class @GanttCanvas
   nameWidth: 200
   activities: null
   context: null
+  headerFont: 'bold 8pt sans-serif'
+  activityFont: '10pt sans-serif'
   constructor: (options) ->
     @gantt = options.gantt if options.gantt?
     @reference = options.reference if options.reference?
@@ -22,17 +24,22 @@ class @GanttCanvas
     @context.canvas.width = @getWidth()
     @context.canvas.height = @getHeight()
     @drawGrid()
+    @drawHeader()
   getHeight: ->
     return 0 if @activities.length is 0
     @activities.length * @rowHeight + @getHeaderHeight()
   getWidth: ->
     return 0 if @activities.length is 0
     @nameWidth + @dayWidth * @getDays()
+  getStartDate: ->
+    return null if @activities.length is 0
+    _.first(@activities).startDate.date
+  getEndDate: ->
+    return null if @activities.length is 0
+    _.last(@activities).endDate.date
   getDays: ->
-    # Find the total days
-    start = _.first(@activities).startDate.date
-    end = _.last(@activities).endDate.date
-    (new XDate(start)).diffDays(new XDate(end)) + 1    
+    return 0 if @activities.length is 0
+    (new XDate(@getStartDate())).diffDays(new XDate(@getEndDate())) + 1    
   getStartDate: ->
     return null if @activities.length is 0
     _.first(@activities).startDate.date
@@ -69,6 +76,34 @@ class @GanttCanvas
     @context.moveTo @nameWidth + 0.5, @getHeaderHeight()
     @context.lineTo @nameWidth + 0.5, @getHeight()
     @context.stroke()
+  drawHeader: ->
+    x = @nameWidth
+    d = @getStartDate()
+    e = @getEndDate()
+    @context.font = @headerFont
+    while d <= e
+      xd = new XDate d
+      # Write the day
+      @context.textAlign = 'center'
+      @context.textBaseline = 'middle'
+      wd = xd.toString('ddd')
+      @context.fillText wd.substring(0, 1), x + @dayWidth / 2, @weekHeaderHeight + @dayHeaderHeight / 2
+      # Write the date text if required
+      if wd is 'Mon'
+        # Write date
+        @context.textAlign = 'left'
+        @context.textBaseline = 'middle'
+        @context.fillText d, x + @dayWidth / 2 - 4, @weekHeaderHeight / 2
+        # Draw extra minor line at x
+        @context.strokeStyle = @minorGridColour
+        @context.lineWidth = @minorGridWidth
+        @context.beginPath()
+        @context.moveTo x + 0.5, 0
+        @context.lineTo x + 0.5, @weekHeaderHeight
+        @context.stroke()
+      x += @dayWidth
+      d = Gantt.dateToIso xd.addDays(1)
+      console.log d
   renderActivity: (context) ->
   getHeaderHeight: ->
     @weekHeaderHeight + @dayHeaderHeight

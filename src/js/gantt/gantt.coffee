@@ -21,7 +21,7 @@ class @Gantt
     activityList = []
     # Get calculated information
     starts = @getStarts()
-    dependantMap = @getdependantMap()
+    dependantMap = @getDependantMap()
     # Calculate actual starts and ends
     for n, a of @activities
       a = _.clone a
@@ -46,7 +46,7 @@ class @Gantt
     list
   # Calculate the earliest starts for each activity hour wise.
   getStarts: ->
-    dependantMap = @getdependantMap()
+    dependantMap = @getDependantMap()
     calculated = {}
     calcStartForActivity = (activity) =>
       latestEnd = 0
@@ -57,7 +57,7 @@ class @Gantt
       calcStartForActivity d for d in dependantMap[activity]
     calcStartForActivity a for a, d of @activities when d.predecessors.length is 0
     calculated
-  getdependantMap: ->
+  getDependantMap: ->
     dependantMap = {}
     for n, a of @activities
       dependantMap[n] = [] unless dependantMap[n]?
