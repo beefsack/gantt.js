@@ -25,8 +25,9 @@ class @GanttCanvas
   activityIncompleteColour: '#EEEEEE'
   activityCritical: '#FF0000'
   activitySlack: '#0000FF'
+  activitySlackLine: '#000000'
   activityLineWidth: 2
-  arrowBuffer: 10
+  arrowBuffer: 8
   arrowRegister: {}
   arrowHeadSize: 3
   shadowOffsetX: 3
@@ -128,6 +129,7 @@ class @GanttCanvas
       d = Gantt.dateToIso xd.addDays(1)
   drawActivities: ->
     y = @getHeaderHeight()
+    activityLinePositions = {}
     for a in @activities
       # Write the name
       @context.font = @activityFont
@@ -158,34 +160,38 @@ class @GanttCanvas
       endDayRatio = a.endDate.hour / endDayAvailHours
       endDayOffset = @getDayInnerWidth() * endDayRatio
       @context.fillStyle = @activityIncompleteColour
-      a.x = startDayX + @activityPadding + startDayOffset
+      a.x = Math.round(startDayX + @activityPadding + startDayOffset)
       a.y = y + @activityPadding
-      a.width = endDayX - startDayX - startDayOffset + endDayOffset
+      a.width = Math.round(endDayX - startDayX - startDayOffset + endDayOffset)
       a.height = @rowHeight - @activityPadding * 2
       @drawActivity a
       # Draw border
       y += @rowHeight
+      if a.predecessors?
+        # Reserve a line position
+        linePos = Math.round((a.x + @arrowBuffer) / @arrowBuffer) * @arrowBuffer
+        while @arrowExists linePos
+          linePos += @arrowBuffer
+        @registerArrow linePos
+        activityLinePositions[a.name] = linePos
+    console.log activityLinePositions
     # Draw arrows
     for a in @activities
       arrowStartX = a.x + a.width
       arrowStartY = a.y + a.height / 2
       for dName in a.dependants
         d = @activityIndex[dName]
-        arrowEndX = d.x + @arrowBuffer
-        while @arrowExists arrowEndX
-          arrowEndX += @arrowBuffer
-        @registerArrow arrowEndX
         arrowEndY = d.y - @activityLineWidth
         # Draw horizontal
-        @context.strokeStyle = @activitySlack
+        @context.strokeStyle = @activitySlackLine
         @context.lineWidth = @activityLineWidth
         @context.beginPath()
         @context.moveTo arrowStartX, arrowStartY
-        @context.lineTo arrowEndX, arrowStartY
-        @context.lineTo arrowEndX, arrowEndY
-        @context.lineTo arrowEndX - @arrowHeadSize, arrowEndY - @arrowHeadSize
-        @context.moveTo arrowEndX, arrowEndY
-        @context.lineTo arrowEndX + @arrowHeadSize, arrowEndY - @arrowHeadSize
+        @context.lineTo activityLinePositions[dName], arrowStartY
+        @context.lineTo activityLinePositions[dName], arrowEndY
+        @context.lineTo activityLinePositions[dName] - @arrowHeadSize, arrowEndY - @arrowHeadSize
+        @context.moveTo activityLinePositions[dName], arrowEndY
+        @context.lineTo activityLinePositions[dName] + @arrowHeadSize, arrowEndY - @arrowHeadSize
         @context.stroke()
   drawActivity: (a) ->
     @enableShadow()
