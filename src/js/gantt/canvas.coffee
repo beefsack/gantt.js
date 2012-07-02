@@ -23,9 +23,10 @@ class @GanttCanvas
   activityPadding: 5
   activityCompleteColour: '#00FF00'
   activityIncompleteColour: '#EEEEEE'
-  activityCritical: '#FF0000'
-  activitySlack: '#0000FF'
+  activityCritical: '#FF6666'
+  activitySlack: '#3399FF'
   activitySlackLine: '#000000'
+  activitySlackBar: 'rgba(51,153,255,0.4)'
   activitySlackBarHeight: 6
   activityLineWidth: 2
   arrowBuffer: 8
@@ -152,7 +153,7 @@ class @GanttCanvas
         xd = new XDate d
         startDayX = x if a.startDate.date is d
         endDayX = x if a.endDate.date is d
-        # slackEndDayX = x if a.slackEndDate.date is d
+        slackEndDayX = x if a.latestEndDate.date is d
         x += @dayWidth
         d = GanttDate.dateToIso xd.addDays(1)
       # Calculate the positioning for the activity rectangle
@@ -162,19 +163,19 @@ class @GanttCanvas
       endDayAvailHours = @gantt.getActivitySchedule(a).getAvailableHoursForDate a.endDate.date
       endDayRatio = a.endDate.hour / endDayAvailHours
       endDayOffset = @getDayInnerWidth() * endDayRatio
-      # slackEndDayAvailHours = @gantt.getActivitySchedule(a).getAvailableHoursForDate a.slackEndDate.date
-      # slackEndDayRatio = a.slackEndDate.hour / slackEndDayAvailHours
-      # slackEndDayOffset = @getDayInnerWidth() * slackEndDayRatio
+      slackEndDayAvailHours = @gantt.getActivitySchedule(a).getAvailableHoursForDate a.latestEndDate.date
+      slackEndDayRatio = a.latestEndDate.hour / slackEndDayAvailHours
+      slackEndDayOffset = @getDayInnerWidth() * slackEndDayRatio
       @context.fillStyle = @activityIncompleteColour
       a.x = Math.round(startDayX + @activityPadding + startDayOffset)
       a.y = y + @activityPadding
       a.width = Math.round(endDayX - startDayX - startDayOffset + endDayOffset)
       a.height = @rowHeight - @activityPadding * 2
-      # a.slack =
-      #   x: a.x + a.width
-      #   y: a.y + Math.round(a.height / 3 - @activitySlackBarHeight / 2)
-      #   width: slackEndDayX - endDayX - endDayOffset + slackEndDayOffset
-      #   height: @activitySlackBarHeight
+      a.slack =
+        x: a.x + a.width
+        y: a.y + Math.round(a.height / 3 - @activitySlackBarHeight / 2)
+        width: slackEndDayX - endDayX - endDayOffset + slackEndDayOffset
+        height: @activitySlackBarHeight
       @drawActivity a
       # Draw border
       y += @rowHeight
@@ -209,13 +210,13 @@ class @GanttCanvas
     @context.fillRect a.x, a.y, a.width, a.height
     @disableShadow()
     # Do the border
-    # @context.strokeStyle = if a.slackDuration > 0 then @activitySlack else @activityCritical
+    @context.strokeStyle = if a.endDate.comparable() < a.latestEndDate.comparable() then @activitySlack else @activityCritical
     @context.lineWidth = @activityLineWidth
     @context.strokeRect a.x, a.y, a.width, a.height
     # Draw the slack, if any
-    # if a.slackDuration > 0
-    #   @context.fillStyle = @activitySlack
-    #   @context.fillRect a.slack.x, a.slack.y, a.slack.width, a.slack.height
+    if a.endDate.comparable() < a.latestEndDate.comparable()
+      @context.fillStyle = @activitySlackBar
+      @context.fillRect a.slack.x, a.slack.y, a.slack.width, a.slack.height
   getHeaderHeight: ->
     @weekHeaderHeight + @dayHeaderHeight
   getAvailColour: (ratio) ->
