@@ -5,7 +5,7 @@ exports.config = function(config) {
   });
   // Build all js in the js directory down to a single file
   config.buildFile('js/gantt.js', {
-    source: ['js/gantt/gantt-schedule.js', 'js/gantt/**.js']
+    source: ['js/gantt/date.js', 'js/gantt/schedule.js', 'js/gantt/**.js']
   });
   // Don't alter files in the lib directory
   config.compileConfig('lib/**', {

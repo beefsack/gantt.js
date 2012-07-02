@@ -1,12 +1,9 @@
-dateToIso = (date) -> date.toString 'yyyy-MM-dd'
-isoToDate = (iso) -> new XDate iso
-
 class @Gantt
   activities: {}
   schedules:
     default: new GanttSchedule
-  startDate: dateToIso new XDate
-  sort: true
+  startDate: new GanttDate
+    date: new XDate
   constructor: (options) ->
     options = {} unless options?
     @activities = options.activities if options.activities?
@@ -14,46 +11,42 @@ class @Gantt
   getCompiledActivities: ->
     activityList = []
     activityMap = {}
-    # Get calculated information
-    starts = @getStarts()
+    # Initialise activities into the list and map
     dependantMap = @getDependantMap()
-    # Calculate actual starts and ends
     for n, a of @activities
-      sched = @getActivitySchedule a
       a = _.clone a
       a.name = n
-      a.startDuration = starts[n]
       a.dependants = dependantMap[n]
-      a.startDate = sched.getDateAfterDuration @startDate, a.startDuration
-      if a.startDate.hour is @getActivitySchedule(a).getAvailableHoursForDate a.startDate.date
-        # Advance to the start of the next day, can't start a task at the end
-        xd = Gantt.isoToDate a.startDate.date
-        xd = xd.addDays 1
-        a.startDate.date = Gantt.dateToIso xd
-        a.startDate.hour = 0
-      a.endDate = sched.getDateAfterDuration @startDate, a.startDuration + a.duration
+      activityMap[n] = activityList.length
       activityList.push a
+    # Calculate starts and ends
+    projectEnd = @startDate
+    calculateStartAndEnd = (a) =>
+      return a if a.startDate? and a.endDate?
+      latestPreEnd = @startDate
+      for pName in a.predecessors
+        p = calculateStartAndEnd activityList[activityMap[pName]]
+        latestPreEnd = p.endDate if p.endDate.comparable() > latestPreEnd.comparable()
+      a.startDate = latestPreEnd
+      a.endDate = @getActivitySchedule(a).getDateAfterDuration latestPreEnd, a.duration
+      projectEnd = a.endDate if a.endDate.comparable() > projectEnd.comparable()
+      a
+    calculateStartAndEnd a for a in activityList
     # Calculate slack
-    for a in activityList
-      activityEnd = a.startDuration + a.duration
-      if a.dependants.length is 0
-        a.slackEndDuration = activityEnd
-        a.slackDuration = 0
-        a.slackEndDate = a.endDate
-        continue
-      a.slackEndDuration = null
-      for d in a.dependants
-        dependantStart = starts[d]
-        if not a.slackEndDuration? or dependantStart < a.slackEndDuration
-          a.slackEndDuration = dependantStart
-          break if a.slackEndDuration is activityEnd
-      a.slackDuration = a.slackEndDuration - activityEnd
-      sched = @getActivitySchedule a
-      a.slackEndDate = sched.getDateAfterDuration @startDate, a.startDuration
-    return activityList unless @sort
+    calculateLatestStartAndEnd = (a) =>
+      return a if a.latestStartDate? and a.latestEndDate?
+      earliestDepStart = projectEnd
+      for dName in a.dependants
+        d = calculateLatestStartAndEnd activityList[activityMap[dName]]
+        earliestDepStart = d.latestStartDate if d.latestStartDate.comparable() < earliestDepStart.comparable()
+      a.latestEndDate = earliestDepStart
+      a.latestStartDate = @getActivitySchedule(a).getDateBeforeDuration earliestDepStart, a.duration
+      a
+    calculateLatestStartAndEnd a for a in activityList
+    # Return the sorted list
     activityList.sort (a, b) ->
-      return 1 if a.startDuration > b.startDuration
-      return -1 if b.startDuration > a.startDuration
+      return 1 if a.startDate.comparable() > b.startDate.comparable()
+      return -1 if b.startDate.comparable() > a.startDate.comparable()
       return 1 if a.duration > b.duration
       return -1 if b.duration > a.duration
       0
@@ -86,6 +79,3 @@ class @Gantt
     dependantMap
   getActivitySchedule: (a) ->
     if a.scheduleName? then @schedules[a.scheduleName] else @schedules.default 
-
-Gantt.dateToIso = dateToIso
-Gantt.isoToDate = isoToDate

@@ -4,7 +4,8 @@
   activities: @activities
 for i in [1..@activityCount - 1]
   predecessors = []
-  predecessors.push("Task #{j}") for j in [1..(i - 1)] when Math.random() > 0.90
+  if i > 1
+    predecessors.push("Task #{j}") for j in [1..(i - 1)] when Math.random() > 0.90
   @activities["Task #{i}"] = {
     predecessors: predecessors
     duration: (4 + Math.round(Math.random() * 100))
