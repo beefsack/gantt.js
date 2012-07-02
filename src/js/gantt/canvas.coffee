@@ -167,14 +167,13 @@ class @GanttCanvas
       @drawActivity a
       # Draw border
       y += @rowHeight
-      if a.predecessors?
+      if a.predecessors.length > 0
         # Reserve a line position
         linePos = Math.round((a.x + @arrowBuffer) / @arrowBuffer) * @arrowBuffer
         while @arrowExists linePos
           linePos += @arrowBuffer
         @registerArrow linePos
         activityLinePositions[a.name] = linePos
-    console.log activityLinePositions
     # Draw arrows
     for a in @activities
       arrowStartX = a.x + a.width

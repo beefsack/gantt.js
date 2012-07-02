@@ -13,6 +13,7 @@ class @Gantt
     @defaultWorkTimes = options.defaultWorkTimes if options.defaultWorkTimes?
   getCompiledActivities: ->
     activityList = []
+    activityMap = {}
     # Get calculated information
     starts = @getStarts()
     dependantMap = @getDependantMap()
@@ -32,6 +33,23 @@ class @Gantt
         a.startDate.hour = 0
       a.endDate = sched.getDateAfterDuration @startDate, a.startDuration + a.duration
       activityList.push a
+    # Calculate slack
+    for a in activityList
+      activityEnd = a.startDuration + a.duration
+      if a.dependants.length is 0
+        a.slackEndDuration = activityEnd
+        a.slackDuration = 0
+        a.slackEndDate = a.endDate
+        continue
+      a.slackEndDuration = null
+      for d in a.dependants
+        dependantStart = starts[d]
+        if not a.slackEndDuration? or dependantStart < a.slackEndDuration
+          a.slackEndDuration = dependantStart
+          break if a.slackEndDuration is activityEnd
+      a.slackDuration = a.slackEndDuration - activityEnd
+      sched = @getActivitySchedule a
+      a.slackEndDate = sched.getDateAfterDuration @startDate, a.startDuration
     return activityList unless @sort
     activityList.sort (a, b) ->
       return 1 if a.startDuration > b.startDuration
