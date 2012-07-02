@@ -25,7 +25,7 @@ class @GanttCanvas
   activityIncompleteColour: '#EEEEEE'
   activityCritical: '#FF6666'
   activitySlack: '#3399FF'
-  activitySlackLine: '#000000'
+  activitySlackLine: '#333333'
   activitySlackBar: 'rgba(51,153,255,0.4)'
   activitySlackBarHeight: 6
   activityLineWidth: 2
@@ -41,6 +41,7 @@ class @GanttCanvas
     @reference = options.reference if options.reference?
   draw: ->
     return unless @gantt? and @reference? and @reference.getContext?
+    @arrowRegister = {}
     @context = @reference.getContext '2d'
     @activities = @gantt.getCompiledActivities()
     # Build index for quick referencing
