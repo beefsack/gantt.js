@@ -198,7 +198,10 @@ class @GanttCanvas
         @context.lineWidth = @activityLineWidth
         @context.beginPath()
         @context.moveTo arrowStartX, arrowStartY
-        @context.lineTo activityLinePositions[dName], arrowStartY
+        @context.lineTo activityLinePositions[dName] - @arrowBuffer, arrowStartY
+        # Draw curve
+        @context.bezierCurveTo activityLinePositions[dName] - @arrowBuffer / 3 * 2, arrowStartY ,activityLinePositions[dName], arrowStartY + @arrowBuffer / 3 * 2 ,activityLinePositions[dName], arrowStartY + @arrowBuffer
+        # Draw vertical
         @context.lineTo activityLinePositions[dName], arrowEndY
         @context.lineTo activityLinePositions[dName] - @arrowHeadSize, arrowEndY - @arrowHeadSize
         @context.moveTo activityLinePositions[dName], arrowEndY
