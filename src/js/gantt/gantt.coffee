@@ -44,8 +44,31 @@ class @Gantt
       a.latestStartDate = @getActivitySchedule(a).getDateBeforeDuration earliestDepStart, a.duration
       a.critical = true if @getActivitySchedule(a).getHoursBetweenGanttDates(a.endDate, a.latestEndDate) <= 0
       a
-    # Fix border start and latest end
     calculateLatestStartAndEnd a for a in activityList
+    # Fix border start and latest end
+    fixExtremeValues = (a) =>
+      sched = @getActivitySchedule a
+      # Move starts on the last hour of a day to the first hour of the next
+      for offset in ['startDate', 'latestStartDate']
+        ganttDate = a[offset]
+        continue if ganttDate.hour < sched.getAvailableHoursForDate(ganttDate.date)
+        d = GanttDate.isoToDate(ganttDate.date).addDays 1
+        d = d.addDays(1) until sched.getAvailableHoursForDate d > 0
+        a[offset] = new GanttDate
+          date: d
+          availableHours: sched.getAvailableHoursForDate(d)
+      # Move ends on the first hour of a day to the last hour of the previous
+      for offset in ['latestEndDate', 'latestEndDate']
+        ganttDate = a[offset]
+        continue if ganttDate.hour > 0
+        d = GanttDate.isoToDate(ganttDate.date).addDays -1
+        d = d.addDays(-1) until sched.getAvailableHoursForDate d > 0
+        availHours = sched.getAvailableHoursForDate(d)
+        a[offset] = new GanttDate
+          date: d
+          hour: availHours - 1
+          availableHours: availHours
+    fixExtremeValues a for a in activityList
     # Return the sorted list
     activityList.sort (a, b) ->
       return 1 if a.startDate.comparable() > b.startDate.comparable()
