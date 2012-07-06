@@ -28,7 +28,7 @@ class @Gantt
         p = calculateStartAndEnd activityList[activityMap[pName]]
         latestPreEnd = p.endDate if p.endDate.comparable() > latestPreEnd.comparable()
       a.startDate = latestPreEnd
-      a.endDate = @getActivitySchedule(a).getDateAfterDuration latestPreEnd, a.duration
+      a.endDate = @getActivitySchedule(a).getDateAfterDuration a.startDate, a.duration
       projectEnd = a.endDate if a.endDate.comparable() > projectEnd.comparable()
       a
     calculateStartAndEnd a for a in activityList
@@ -40,8 +40,11 @@ class @Gantt
         d = calculateLatestStartAndEnd activityList[activityMap[dName]]
         earliestDepStart = d.latestStartDate if d.latestStartDate.comparable() < earliestDepStart.comparable()
       a.latestEndDate = earliestDepStart
+      # Move to the end of the previous available day if currently at the start
       a.latestStartDate = @getActivitySchedule(a).getDateBeforeDuration earliestDepStart, a.duration
+      a.critical = true if @getActivitySchedule(a).getHoursBetweenGanttDates(a.endDate, a.latestEndDate) <= 0
       a
+    # Fix border start and latest end
     calculateLatestStartAndEnd a for a in activityList
     # Return the sorted list
     activityList.sort (a, b) ->

@@ -2,9 +2,9 @@ dateToIso = (date) -> date.toString 'yyyy-MM-dd'
 isoToDate = (iso) -> new XDate iso
 
 class @GanttDate
-  date: null
-  hour: null
-  availableHours: null
+  date: new XDate()
+  hour: 0
+  availableHours: 0
   ratio: ->
     return null unless @hour? and @availableHours?
     @hour / @availableHours

@@ -164,6 +164,7 @@ class @GanttCanvas
       endDayAvailHours = @gantt.getActivitySchedule(a).getAvailableHoursForDate a.endDate.date
       endDayRatio = a.endDate.hour / endDayAvailHours
       endDayOffset = @getDayInnerWidth() * endDayRatio
+      # Draw slack if required
       slackEndDayAvailHours = @gantt.getActivitySchedule(a).getAvailableHoursForDate a.latestEndDate.date
       slackEndDayRatio = a.latestEndDate.hour / slackEndDayAvailHours
       slackEndDayOffset = @getDayInnerWidth() * slackEndDayRatio
@@ -214,11 +215,11 @@ class @GanttCanvas
     @context.fillRect a.x, a.y, a.width, a.height
     @disableShadow()
     # Do the border
-    @context.strokeStyle = if a.endDate.comparable() < a.latestEndDate.comparable() then @activitySlack else @activityCritical
+    @context.strokeStyle = if a.critical then @activityCritical else @activitySlack
     @context.lineWidth = @activityLineWidth
     @context.strokeRect a.x, a.y, a.width, a.height
     # Draw the slack, if any
-    if a.endDate.comparable() < a.latestEndDate.comparable()
+    unless a.critical
       @context.fillStyle = @activitySlackBar
       @context.fillRect a.slack.x, a.slack.y, a.slack.width, a.slack.height
   getHeaderHeight: ->

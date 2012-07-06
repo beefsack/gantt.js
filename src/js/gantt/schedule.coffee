@@ -43,7 +43,12 @@ class @GanttSchedule
   getHoursBetweenDates: (startDate, startHour, endDate, endHour) ->
     hours = endHour - startHour
     curDate = _.clone startDate
-    until curDate == endDate
+    targetDate = _.clone endDate
+    [curDate, targetDate] = [targetDate, curDate] if curDate > targetDate
+    until curDate >= targetDate
       hours += @getAvailableHoursForDate curDate
       curDate = curDate.addDays 1
-    hours
+    Math.abs hours
+  getHoursBetweenGanttDates: (start, end) ->
+    @getHoursBetweenDates GanttDate.isoToDate(start.date), start.hour,
+    GanttDate.isoToDate(end.date), end.hour
