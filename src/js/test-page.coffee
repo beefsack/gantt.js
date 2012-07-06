@@ -1,4 +1,4 @@
-@ganttFormSubmit = () =>
+@ganttFormSubmit = =>
   activityCount = Math.max(1, parseInt document.querySelector('#activityCount').value)
   activityLinkRate = Math.max(0, Math.min(1, parseFloat document.querySelector('#activityLinkRate').value))
   activities = {}
@@ -10,6 +10,16 @@
       predecessors: predecessors
       duration: (4 + Math.round(Math.random() * 100))
     }
+  document.querySelector('#ganttData').value = JSON.stringify activities
+  renderActivities activities
+  false
+
+@ganttLoadData = =>
+  activities = JSON.parse document.querySelector('#ganttData').value
+  renderActivities activities
+  false
+
+@renderActivities = (activities) ->
   @gantt = new Gantt
     activities: activities
   @ganttCanvas = new GanttCanvas
@@ -18,6 +28,6 @@
   @ganttCanvas.gantt.schedules.default.overriddenWorkTimes['2012-07-05'] = 4
   @ganttCanvas.gantt.schedules.default.overriddenWorkTimes['2012-07-11'] = 4
   @ganttCanvas.draw()
-  false
+
 
 @ganttFormSubmit()

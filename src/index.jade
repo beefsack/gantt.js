@@ -13,6 +13,10 @@ html
       input(type='submit')
     div#gantt-container
       canvas#gantt-target
+    form(onsubmit='return ganttLoadData();')
+      textarea#ganttData
+      input(type='submit')
+    script(src='http://cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.js')
     script(src='lib/underscore-min.js')
     script(src='lib/xdate.js')
     script(src='js/gantt.js')
