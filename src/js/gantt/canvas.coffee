@@ -190,19 +190,21 @@ class @GanttCanvas
         activityLinePositions[a.name] = linePos
     # Draw arrows
     for a in @activities
-      arrowStartX = a.x + a.width
+      arrowStartX = a.x + a.width + Math.floor(@activityLineWidth / 2)
       arrowStartY = Math.round(a.y + a.height / 3 * 2)
       for dName in a.dependants
         d = @activityIndex[dName]
         arrowEndY = d.y - @activityLineWidth
+        # Calculate curve positions
+        curveStart = Math.max(arrowStartX, activityLinePositions[dName] - @arrowBuffer)
         # Draw horizontal
         @context.strokeStyle = @activitySlackLine
         @context.lineWidth = @activityLineWidth
         @context.beginPath()
         @context.moveTo arrowStartX, arrowStartY
-        @context.lineTo activityLinePositions[dName] - @arrowBuffer, arrowStartY
+        @context.lineTo curveStart, arrowStartY
         # Draw curve
-        @context.bezierCurveTo activityLinePositions[dName] - @arrowBuffer / 3 * 2, arrowStartY ,activityLinePositions[dName], arrowStartY + @arrowBuffer / 3 * 2 ,activityLinePositions[dName], arrowStartY + @arrowBuffer
+        @context.bezierCurveTo curveStart + @arrowBuffer / 3, arrowStartY, activityLinePositions[dName], arrowStartY + @arrowBuffer / 3 * 2, activityLinePositions[dName], arrowStartY + @arrowBuffer
         # Draw vertical
         @context.lineTo activityLinePositions[dName], arrowEndY
         @context.lineTo activityLinePositions[dName] - @arrowHeadSize, arrowEndY - @arrowHeadSize
